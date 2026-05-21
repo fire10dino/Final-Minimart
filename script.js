@@ -1,4 +1,18 @@
-// Check if user is logged in
+// View Order History button
+    document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+        showOrderHistory();
+    });
+
+    // Close history modal
+    document.getElementById('closeHistoryBtn').addEventListener('click', () => {
+        document.getElementById('historyOverlay').classList.remove('active');
+        document.getElementById('historyModal').style.display = 'none';
+    });
+
+    document.getElementById('historyOverlay').addEventListener('click', () => {
+        document.getElementById('historyOverlay').classList.remove('active');
+        document.getElementById('historyModal').style.display = 'none';
+    });// Check if user is logged in
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html';
 }
@@ -279,4 +293,98 @@ document.addEventListener('DOMContentLoaded', () => {
 function closeCheckoutForm() {
     document.getElementById('formOverlay').classList.remove('active');
     document.getElementById('checkoutForm').classList.remove('active');
+}
+
+// Save order to Firebase
+async function saveOrderToHistory(orderNumber, items, total) {
+    const currentUser = localStorage.getItem('currentUser');
+    
+    try {
+        await window.addDoc(window.collection(window.db, 'orders'), {
+            username: currentUser,
+            orderNumber: orderNumber,
+            items: items,
+            total: total,
+            date: new Date().toISOString(),
+            timestamp: Date.now()
+        });
+        console.log('Order saved to Firebase!');
+    } catch (error) {
+        console.error('Error saving order:', error);
+    }
+}
+
+// Show order history
+async function showOrderHistory() {
+    const currentUser = localStorage.getItem('currentUser');
+    const historyContent = document.getElementById('historyContent');
+    
+    historyContent.innerHTML = '<div style="text-align: center; padding: 20px; color: white;">Loading orders...</div>';
+    
+    document.getElementById('historyOverlay').classList.add('active');
+    document.getElementById('historyModal').style.display = 'block';
+    
+    try {
+        const q = window.query(
+            window.collection(window.db, 'orders'),
+            window.where('username', '==', currentUser),
+            window.orderBy('timestamp', 'desc')
+        );
+        
+        const querySnapshot = await window.getDocs(q);
+        
+        if (querySnapshot.empty) {
+            historyContent.innerHTML = `
+                <div class="no-history">
+                    <div class="no-history-icon">📦</div>
+                    <p>No orders yet!</p>
+                    <p style="color: #666;">Your purchase history will appear here.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        querySnapshot.forEach((doc) => {
+            const order = doc.data();
+            const date = new Date(order.date).toLocaleString();
+            
+            html += `
+                <div class="history-order">
+                    <div class="history-order-header">
+                        <div class="history-order-number">Order #${order.orderNumber}</div>
+                        <div class="history-order-date">${date}</div>
+                    </div>
+                    <div class="history-order-items">
+            `;
+            
+            order.items.forEach(item => {
+                html += `
+                    <div class="history-item">
+                        <span class="history-item-name">${item.name}</span>
+                        <span class="history-item-qty">x${item.quantity}</span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="history-order-total">Total: ${order.total.toFixed(2)}</div>
+                </div>
+            `;
+        });
+        
+        historyContent.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        historyContent.innerHTML = `
+            <div class="no-history">
+                <div class="no-history-icon">⚠️</div>
+                <p style="color: #f44336;">Error loading orders</p>
+                <p style="color: #666;">Please try again later.</p>
+            </div>
+        `;
+    }
 }
