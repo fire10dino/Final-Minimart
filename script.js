@@ -13,7 +13,6 @@ if (currentUser) {
 
 // Products data
 const products = {
-
     cookies: [
         { id: 'cookies-1', name: 'Lays Chips:1can ~50g', price: 40, image: '' },
         { id: 'cookies-2', name: 'Doritos:~50g', price: 40, image: '' },
@@ -44,7 +43,6 @@ const products = {
         { id: 'giftcard-2', name: 'Apple Shop Gift Card', price: 500.00, image: '' },
         { id: 'giftcard-3', name: 'Google Play Gift Card', price: 500.00, image: '' }
     ]
-
 };
 
 let cart = [];
@@ -56,7 +54,7 @@ Object.values(products).flat().forEach(product => {
     quantities[product.id] = 1;
 });
 
-// Generate random order number
+// Generate order number
 function generateOrderNumber() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -275,7 +273,7 @@ function showOrderHistory() {
     historyContent.innerHTML = `
         <div class="no-history">
             <div class="no-history-icon">📦</div>
-            <p>Firebase temporarily disabled.</p>
+            <p>Order history temporarily unavailable.</p>
         </div>
     `;
 
@@ -349,21 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 .style.display = 'none';
 
         });
-
-    // Thank you popup close
-    const thankYouBtn =
-        document.getElementById('thankYouBtn');
-
-    if (thankYouBtn) {
-
-        thankYouBtn.addEventListener('click', () => {
-
-            document.getElementById('thankYouOverlay')
-                .classList.remove('active');
-
-        });
-
-    }
 
     // Quantity buttons
     document.addEventListener('click', (e) => {
@@ -448,13 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // FORM SUBMIT
     document.getElementById('orderForm')
-        .addEventListener('submit', async (e) => {
+        .addEventListener('submit', () => {
 
-            e.preventDefault();
-
-            const form = e.target;
-
-            // Build order text
             let orderItemsText = '';
             let total = 0;
 
@@ -475,36 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('totalAmountHidden').value =
                 total.toFixed(2);
-
-            try {
-
-                await fetch(form.action, {
-                    method: "POST",
-                    body: new FormData(form),
-                    mode: "no-cors"
-                });
-
-            } catch (err) {
-
-                console.error(err);
-
-            }
-
-            // Show thank you popup
-            document.getElementById('displayOrderNumber')
-                .textContent = currentOrderNumber;
-
-            document.getElementById('thankYouOverlay')
-                .classList.add('active');
-
-            // Reset
-            cart = [];
-
-            updateCartDisplay();
-
-            form.reset();
-
-            closeCheckoutForm();
 
         });
 
