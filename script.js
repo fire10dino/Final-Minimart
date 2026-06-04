@@ -157,6 +157,7 @@ function updateCart() {
     cartCount.textContent = count;
     totalAmount.textContent = "$" + total.toFixed(2);
 }
+
 // ===== TOGGLES =====
 function toggleCart() {
     el('cartOverlay')?.classList.toggle('active');
@@ -326,6 +327,11 @@ window.addEventListener('DOMContentLoaded', () => {
         el('displayOrderNumber').textContent = currentOrderNumber;
 
         e.target.reset();
+    });
+
+    // ===== FIX: Thank You close button =====
+    el('thankYouBtn')?.addEventListener('click', () => {
+        el('thankYouOverlay').classList.remove('active');
     });
 
     // logout
